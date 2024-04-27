@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClCompile Include="EBOClass.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="KBControlManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ObjManager.cpp" />
     <ClCompile Include="ShaderClass.cpp" />
@@ -142,15 +143,18 @@
     <ClCompile Include="TextureClass.cpp" />
     <ClCompile Include="VAOClass.cpp" />
     <ClCompile Include="VBOClass.cpp" />
+    <ClCompile Include="VertexBufferManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EBOClass.h" />
+    <ClInclude Include="KBControlManager.h" />
     <ClInclude Include="ObjectJSONReader.h" />
     <ClInclude Include="ObjManager.h" />
     <ClInclude Include="ShaderClass.h" />
     <ClInclude Include="TextureClass.h" />
     <ClInclude Include="VAOClass.h" />
     <ClInclude Include="VBOClass.h" />
+    <ClInclude Include="VertexBufferManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\bridge.png" />

@@ -7,7 +7,7 @@ public:
 	unsigned int VAO_id;
 
 	VAO();
-	void Link(VBO& vertex_buffer, unsigned int layout, unsigned int layout_num_elements, unsigned int total_num_elements,unsigned int offset);
+	void Link(VBO* vertex_buffer, unsigned int layout, unsigned int layout_num_elements, unsigned int total_num_elements,unsigned int offset);
 	void Bind();
 	void Unbind();
 	void Delete();

@@ -14,6 +14,8 @@
 #include"VBOClass.h"
 #include"EBOClass.h"
 #include"ObjManager.h"
+#include "VertexBufferManager.h"
+#include "KBControlManager.h"
 
 
 using namespace std;
@@ -64,12 +66,13 @@ void APIENTRY glDebugOutput(GLenum source,
 	std::cout << std::endl;
 }
 
+
 int init_engine(GLFWwindow** window_ptr)
 {
-	cout << "hello world!" << endl;
+	std::cout << "hello world!" << endl;
 
 	if (!glfwInit()) {
-		cout << "Failed to initialize GLFW" << endl;
+		std::cout << "Failed to initialize GLFW" << endl;
 		return -1;
 	}
 
@@ -83,13 +86,13 @@ int init_engine(GLFWwindow** window_ptr)
 	*window_ptr = glfwCreateWindow(800, 800, "test_window_title", NULL, NULL);
 	if (*window_ptr == NULL)
 	{
-		cout << "failed to cerate window" << endl;
+		std::cout << "failed to cerate window" << endl;
 		return -1;
 	}
 
 	glfwMakeContextCurrent(*window_ptr);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		cout << "Failed to initialize GLAD" << endl;
+		std::cout << "Failed to initialize GLAD" << endl;
 		glfwTerminate();
 		return -1;
 	}
@@ -109,6 +112,9 @@ int init_engine(GLFWwindow** window_ptr)
 	glfwMakeContextCurrent(*window_ptr);
 	gladLoadGL();
 	glViewport(0, 0, 800, 800);
+
+	KBControlManager* KBMgr = KBControlManager::getInstance(*window_ptr);
+	KBMgr->registerCB();
 
 	const GLubyte* glVersion = glGetString(GL_VERSION);
 	if (glVersion) {
@@ -150,106 +156,46 @@ int main()
 	}
 
 
-	//write 
-	//  vertex data 
-	float model01_points[] = {
-		//position		//colors		//text coords
-		1.0f,  1.0f,	1.0,1.0,0.0f,	1.0f,1.0f,
-		1.0f, -1.0f,	1.0,0.0,0.0f,	1.0f,0.0f,
-	   -1.0f, -1.0f,	0.0,0.0,1.0f,	0.0f, 0.0f,
-	   -1.0f,  1.0f,	0.0,1.0,1.0f,	0.0f,1.0f
-	};
-
-	unsigned int model01_indices[] =
-	{
-		0,
-		1,
-		2,
-		0,
-		2,
-		3
-	};
-	//write the vertex data 
-	float pyd_points[] = {
-
-		//position			//colors		//text coords
-		-0.5f, 0.0f, 0.5f,	1.0,1.0,0.0f,	0.0f,0.0f, //0
-		-0.5f, 0.0f, -0.5f,	1.0,0.0,0.0f,	0.5f,0.0f, //1
-		 0.5f, 0.0f, -0.5f,	0.0,0.0,1.0f,	0.0f,0.0f, //2
-		 0.5f, 0.0f,0.5f,	0.0,1.0,1.0f,	0.5f,0.5f, //3
-		0.0f, 0.8f, 0.0f,	0.0,1.0,1.0f,	0.25f,0.5f, //4
-
-	};
-
-	unsigned int pyd_indices[] = {
-
-		0, 1, 2,  // Base triangle 1
-		0, 2, 3,  // Base triangle 2
-		0, 1, 4,  // Base triangle 3
-		4, 3, 0,   // Side triangle 2
-		1, 2, 4,  // Base triangle 4
-		2, 3, 4,  // Side triangle 1
-
-	};
-
-	//create vertex and fragment objs and bundle them into a shader program and activate it
-
-
-
-	unsigned int offset = 0;
-	unsigned int stride = 8;
-
-	//init textures for all the models
-
-	//init texture_01
-	TEXTURE texture_01("Resources/bridge.png");
-	TEXTURE::setSlot(0); //activate slot 0 to write bridge image to slot 0
-	texture_01.Bind_and_Write();
-
-	cout << "debug checkpoint 01" << endl;
-	//init vao for model 01
-	VAO vao_01;
-	VBO vbo_01(pyd_points, sizeof(pyd_points));
-	EBO ebo_01(pyd_indices, sizeof(pyd_indices));
-	offset = 0;
-	vao_01.Link(vbo_01, 0, 3, stride, offset);
-	offset = 3;
-	vao_01.Link(vbo_01, 1, 3, stride, offset);
-	offset = 6;
-	vao_01.Link(vbo_01, 2, 2, stride, offset);
-
-	cout << "debug checkpoint 02" << endl;
-
 	Shader shader("Shaders/default00.vert", "Shaders/default00.frag");
-	unsigned int scale_id = glGetUniformLocation(shader.getId(), "scale");
-	unsigned int tex_slot_id = glGetUniformLocation(shader.getId(), "texture_slot");
+	VertexBufferManager* ground_obj = new VertexBufferManager(&objectStore["Ground"].vertices, &objectStore["Ground"].indices);
+	VertexBufferManager* cube02_obj = new VertexBufferManager(&objectStore["Cube02"].vertices, &objectStore["Cube02"].indices);
 
-	unsigned int modelLoc = glGetUniformLocation(shader.getId(), "model");
-	unsigned int viewLoc = glGetUniformLocation(shader.getId(), "view");
-	unsigned int projLoc = glGetUniformLocation(shader.getId(), "proj");
-
-	cout << "debug checkpoint 03" << endl;
-
-	//deinit for texture_01
-	texture_01.Unbind();
-
-	//deinit for model 01
-	vao_01.Unbind();
-	vbo_01.Unbind();
-	ebo_01.Unbind();
-
-
-	//init a timer for rotation
-	float rotation = 0.0f;
-	double prevTime = glfwGetTime();
-
+	
 	//enable depth 
 	glEnable(GL_DEPTH_TEST);
 
-	cout << "debug checkpoint" << endl;
 
 
 	int wnd_closed = glfwWindowShouldClose(window);
+	// Use the shader program
+	shader.Activate();
+
+	//view matrix 
+	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, -500.0f);  // Camera position in world space
+	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 1.0f);    // Point the camera is looking at
+	glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	glm::mat4 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
+
+	//init a timer for rotation
+	float rotation = 0.0f;
+	float translation = 0.0f;
+	double prevTime = glfwGetTime();
+
+	unsigned int projLoc = glGetUniformLocation(shader.getId(), "proj");
+	unsigned int modelLoc = glGetUniformLocation(shader.getId(), "model");
+	unsigned int viewLoc = glGetUniformLocation(shader.getId(), "view");
+	glm::mat4 proj = glm::perspective(glm::radians(30.0f), (float)(800 / 800), 50.0f, 500.0f);
+	//glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f,0.1f,1000.0f);
+	 //glm::mat4 proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f);
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+	glm::mat4 model = glm::mat4(1.0f);
+
+	//setup KB controls
+
+	KBControlManager* KBMgr = KBControlManager::getInstance(window);
+
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -257,71 +203,129 @@ int main()
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	
 
-		// Use the shader program
-		shader.Activate();
+		//MODIFY the model matrix 
 
-		//initilize the mvp matrices 
-		glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4 view = glm::mat4(1.0f);
-		glm::mat4 proj = glm::mat4(1.0f);
-
-		//rotate the model matrix 
 		double crntTime = glfwGetTime();
 		if (crntTime - prevTime >= 1 / 60)
 		{
 			rotation = rotation + 0.5f;
 			prevTime = crntTime;
+			translation = translation + 0.001f;
+			//std::cout << "rotation:" << rotation << std::endl;
+			//std::cout << "translation:" << rotation << std::endl;
 		}
-		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-
-		//move the object arther away 
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
-		proj = glm::perspective(glm::radians(45.0f), (float)(800 / 800), 0.1f, 100.0f);
+		
+		 glm::mat4 model_mat = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
 
 
-		glUniform1f(scale_id, 0.5f);
-		glUniform1i(tex_slot_id, 0);
-
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_mat));
 
 
-		//toggle between vao_01 and vao_02
-		vao_01.Bind();
+		 //MODIFY the camera view matrix
+		 float moveAmount = 4.0f;
+		 float rotAmount = 1.0f;
+		 if (KBMgr->moveForward)
+		 {
+			 // Move the camera towards the target by 1 unit
+			 glm::vec3 direction = glm::normalize(cameraTarget - cameraPosition);  // Calculate direction towards the target
+			 
+			 cameraPosition += direction* moveAmount;  // Move the camera position by 1 unit towards the target
+
+			 // Regenerate the view matrix with the updated camera position
+			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
+		 }
+		 else if (KBMgr->moveBackward)
+		 {
+			 // Move the camera towards the target by 1 unit
+			 glm::vec3 direction = glm::normalize(cameraTarget - cameraPosition);  // Calculate direction towards the target
+			 cameraPosition -= direction* moveAmount;  // Move the camera position by 1 unit towards the target
+
+			 // Regenerate the view matrix with the updated camera position
+			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
+		 }
+		 else if (KBMgr->moveRight)
+		 {
+			 // Compute the forward direction of the camera
+			 glm::vec3 forward = glm::normalize(cameraTarget - cameraPosition);
+
+			 // Compute the right direction of the camera
+			 glm::vec3 right = glm::normalize(glm::cross(forward, upVector));
+
+			 cameraPosition += right * moveAmount;
+			 cameraTarget += right * moveAmount;
+
+			 // Update the view matrix
+			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
+		 }
+		 else if (KBMgr->moveLeft)
+		 {
+			 // Compute the forward direction of the camera
+			 glm::vec3 forward = glm::normalize(cameraTarget - cameraPosition);
+
+			 // Compute the right direction of the camera
+			 glm::vec3 right = glm::normalize(glm::cross(forward, upVector));
+
+			 cameraPosition -= right * moveAmount;
+			 cameraTarget -= right * moveAmount;
+			 // Update the view matrix
+			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
+		 }
+		 else if (KBMgr->turnRight)
+		 {
+			 glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-1* rotAmount), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			 glm::vec4 rotatedTarget = rotation * glm::vec4(cameraTarget - cameraPosition, 1.0f);
+
+			 cameraTarget = glm::vec3(rotatedTarget) + cameraPosition;
+
+			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
+		 }
+
+		 else if (KBMgr->turnLeft)
+		 {
+			 glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(rotAmount), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			 glm::vec4 rotatedTarget = rotation * glm::vec4(cameraTarget - cameraPosition, 1.0f);
+
+			 cameraTarget = glm::vec3(rotatedTarget) + cameraPosition;
+
+			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
+		 }
 
 
-		glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+
+		 std::cout << "cameraPosition x: " << cameraPosition.x << ", y: " << cameraPosition.y << ", z: " << cameraPosition.z << std::endl;
+
+		 glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_mat));
+		 cube02_obj->getVAOBuffer()->Bind();
+		 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+
+		 //toggle between vao_01 and vao_02
+		 ground_obj->getVAOBuffer()->Bind();
+		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		 glDrawElements(GL_TRIANGLES,6, GL_UNSIGNED_INT, 0);
+
+		//object_02->getVAOBuffer()->Bind();
+
+		//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR)
 		{
-			cout << "OpenGL Error: " << error << endl;
+			std::cout << "OpenGL Error: " << error << endl;
 		}
 		else
 		{
-			cout << "triangle drawn successfully!" << endl;
+			//std::cout << "triangle drawn successfully!" << endl;
 		}
-
-
-
 
 		glfwSwapBuffers(window);
 
 		glfwPollEvents();
 	}
 
-	vao_01.Delete();
-	ebo_01.Delete();
-	vbo_01.Delete();
-
-
-	texture_01.Delete();
-
-	shader.Delete();
-
-	glfwDestroyWindow(window);
-	glfwTerminate();
 	return 0;
 }

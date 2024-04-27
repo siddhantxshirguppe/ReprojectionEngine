@@ -6,7 +6,7 @@ class EBO
 public:
 	unsigned int EBO_id;
 
-	EBO(unsigned int* index_data, int num_elements);
+	EBO(int* index_data, int num_elements);
 	void Bind();
 	void Unbind();
 	void Delete();

@@ -1,0 +1,6 @@
+sid_opengl/Debug/*
+sid_opengl/x64/*
+.vs/*
+CppProperties.json
+Libraries/*
+x64/*
