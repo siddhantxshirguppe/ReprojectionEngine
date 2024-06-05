@@ -15,7 +15,8 @@
 #include"EBOClass.h"
 #include"ObjManager.h"
 #include "VertexBufferManager.h"
-#include "KBControlManager.h"
+#include "FrameVertexBufferManager.h"
+#include "CameraViewManager.h"
 
 
 using namespace std;
@@ -115,6 +116,8 @@ int init_engine(GLFWwindow** window_ptr)
 
 	KBControlManager* KBMgr = KBControlManager::getInstance(*window_ptr);
 	KBMgr->registerCB();
+	MouseControlManager* MSMgr = MouseControlManager::getInstance(*window_ptr);
+	MSMgr->registerCB();
 
 	const GLubyte* glVersion = glGetString(GL_VERSION);
 	if (glVersion) {
@@ -134,7 +137,7 @@ int main()
 
 	assert(ObjectJSONReader::readObjectData("Objects.json") == 0);
 	
-
+	CameraViewManager* camMgr = CameraViewManager::getInstance(window);
 	ObjManager* objmgr = ObjManager::getInstance();
 	// Access the ObjectStore dictionary
 	auto& objectStore = *(objmgr->ObjectStore);
@@ -157,10 +160,11 @@ int main()
 
 
 	Shader shader("Shaders/default00.vert", "Shaders/default00.frag");
-	VertexBufferManager* ground_obj = new VertexBufferManager(&objectStore["Ground"].vertices, &objectStore["Ground"].indices);
-	VertexBufferManager* cube02_obj = new VertexBufferManager(&objectStore["Cube02"].vertices, &objectStore["Cube02"].indices);
+	VertexBufferManager* ground_obj = new VertexBufferManager(&objectStore["Ground"].vertices, &objectStore["Ground"].indices, objectStore["Ground"].loc, objectStore["Ground"].hasTextures, objectStore["Ground"].texturePath);
+	VertexBufferManager* cube01_obj = new VertexBufferManager(&objectStore["Cube01"].vertices, &objectStore["Cube01"].indices, objectStore["Cube01"].loc, objectStore["Cube01"].hasTextures, objectStore["Cube01"].texturePath);
+	VertexBufferManager* cube02_obj = new VertexBufferManager(&objectStore["Cube02"].vertices, &objectStore["Cube02"].indices, objectStore["Cube02"].loc, objectStore["Cube02"].hasTextures, objectStore["Cube02"].texturePath);
+	FrameVertexBufferManager* frame_obj = new FrameVertexBufferManager(&objectStore["FrameQuad"].vertices, &objectStore["FrameQuad"].indices, objectStore["FrameQuad"].loc, objectStore["FrameQuad"].hasTextures, objectStore["FrameQuad"].texturePath,camMgr);
 
-	
 	//enable depth 
 	glEnable(GL_DEPTH_TEST);
 
@@ -170,12 +174,10 @@ int main()
 	// Use the shader program
 	shader.Activate();
 
-	//view matrix 
-	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, -500.0f);  // Camera position in world space
-	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 1.0f);    // Point the camera is looking at
-	glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+	
 
-	glm::mat4 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
+
+
 
 	//init a timer for rotation
 	float rotation = 0.0f;
@@ -185,16 +187,14 @@ int main()
 	unsigned int projLoc = glGetUniformLocation(shader.getId(), "proj");
 	unsigned int modelLoc = glGetUniformLocation(shader.getId(), "model");
 	unsigned int viewLoc = glGetUniformLocation(shader.getId(), "view");
-	glm::mat4 proj = glm::perspective(glm::radians(30.0f), (float)(800 / 800), 50.0f, 500.0f);
+	unsigned int textBoolLoc = glGetUniformLocation(shader.getId(), "hasTextures");
+	glm::mat4 proj = glm::perspective(glm::radians(30.0f), (float)(800 / 800), 50.0f, 1000.0f);
 	//glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f,0.1f,1000.0f);
-	 //glm::mat4 proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f);
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
 	glm::mat4 model = glm::mat4(1.0f);
 
 	//setup KB controls
-
-	KBControlManager* KBMgr = KBControlManager::getInstance(window);
 
 
 	while (!glfwWindowShouldClose(window))
@@ -203,124 +203,54 @@ int main()
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	
-
-		//MODIFY the model matrix 
-
-		double crntTime = glfwGetTime();
-		if (crntTime - prevTime >= 1 / 60)
-		{
-			rotation = rotation + 0.5f;
-			prevTime = crntTime;
-			translation = translation + 0.001f;
-			//std::cout << "rotation:" << rotation << std::endl;
-			//std::cout << "translation:" << rotation << std::endl;
-		}
-		
-		 glm::mat4 model_mat = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-
-
-		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_mat));
-
-
 		 //MODIFY the camera view matrix
-		 float moveAmount = 4.0f;
-		 float rotAmount = 1.0f;
-		 if (KBMgr->moveForward)
-		 {
-			 // Move the camera towards the target by 1 unit
-			 glm::vec3 direction = glm::normalize(cameraTarget - cameraPosition);  // Calculate direction towards the target
-			 
-			 cameraPosition += direction* moveAmount;  // Move the camera position by 1 unit towards the target
-
-			 // Regenerate the view matrix with the updated camera position
-			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
-		 }
-		 else if (KBMgr->moveBackward)
-		 {
-			 // Move the camera towards the target by 1 unit
-			 glm::vec3 direction = glm::normalize(cameraTarget - cameraPosition);  // Calculate direction towards the target
-			 cameraPosition -= direction* moveAmount;  // Move the camera position by 1 unit towards the target
-
-			 // Regenerate the view matrix with the updated camera position
-			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
-		 }
-		 else if (KBMgr->moveRight)
-		 {
-			 // Compute the forward direction of the camera
-			 glm::vec3 forward = glm::normalize(cameraTarget - cameraPosition);
-
-			 // Compute the right direction of the camera
-			 glm::vec3 right = glm::normalize(glm::cross(forward, upVector));
-
-			 cameraPosition += right * moveAmount;
-			 cameraTarget += right * moveAmount;
-
-			 // Update the view matrix
-			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
-		 }
-		 else if (KBMgr->moveLeft)
-		 {
-			 // Compute the forward direction of the camera
-			 glm::vec3 forward = glm::normalize(cameraTarget - cameraPosition);
-
-			 // Compute the right direction of the camera
-			 glm::vec3 right = glm::normalize(glm::cross(forward, upVector));
-
-			 cameraPosition -= right * moveAmount;
-			 cameraTarget -= right * moveAmount;
-			 // Update the view matrix
-			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
-		 }
-		 else if (KBMgr->turnRight)
-		 {
-			 glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-1* rotAmount), glm::vec3(0.0f, 1.0f, 0.0f));
-
-			 glm::vec4 rotatedTarget = rotation * glm::vec4(cameraTarget - cameraPosition, 1.0f);
-
-			 cameraTarget = glm::vec3(rotatedTarget) + cameraPosition;
-
-			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
-		 }
-
-		 else if (KBMgr->turnLeft)
-		 {
-			 glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(rotAmount), glm::vec3(0.0f, 1.0f, 0.0f));
-
-			 glm::vec4 rotatedTarget = rotation * glm::vec4(cameraTarget - cameraPosition, 1.0f);
-
-			 cameraTarget = glm::vec3(rotatedTarget) + cameraPosition;
-
-			 view_mat = glm::lookAt(cameraPosition, cameraTarget, upVector);
-		 }
-
-
-
-		 std::cout << "cameraPosition x: " << cameraPosition.x << ", y: " << cameraPosition.y << ", z: " << cameraPosition.z << std::endl;
-
+		 glm::mat4 view_mat = camMgr->getCameraView();
 		 glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_mat));
-		 cube02_obj->getVAOBuffer()->Bind();
-		 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 
+#if 1 
 		 //toggle between vao_01 and vao_02
+		 
 		 ground_obj->getVAOBuffer()->Bind();
+
 		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		 glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_mat));
+		 glUniform1i(textBoolLoc, ground_obj->hasTexture() ? 1 : 0);
 		 glDrawElements(GL_TRIANGLES,6, GL_UNSIGNED_INT, 0);
 
-		//object_02->getVAOBuffer()->Bind();
+		 cube02_obj->getVAOBuffer()->Bind();
 
-		//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		 glm::mat4 model_mat_02 = cube02_obj->getModelMatrix();
+		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_mat_02));
+		 glUniform1i(textBoolLoc, cube02_obj->hasTexture() ? 1 : 0);
+		 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+		 cube01_obj->getVAOBuffer()->Bind();
+
+		 glm::mat4 model_mat_01 = cube01_obj->getModelMatrix();
+		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_mat_01));
+		 glUniform1i(textBoolLoc, cube01_obj->hasTexture() ? 1 : 0);
+		 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+		 frame_obj->getVAOBuffer()->Bind();
+		 glm::mat4 model_mat_frame = frame_obj->getModelMatrix();
+		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_mat_frame));
+		 glUniform1i(textBoolLoc, frame_obj->hasTexture() ? 1 : 0);
+		 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+#endif
+
 
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR)
 		{
 			std::cout << "OpenGL Error: " << error << endl;
-		}
+		}     
 		else
 		{
 			//std::cout << "triangle drawn successfully!" << endl;
 		}
+
+
 
 		glfwSwapBuffers(window);
 

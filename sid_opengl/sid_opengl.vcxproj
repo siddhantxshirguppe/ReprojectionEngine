@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -132,10 +132,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CameraViewManager.cpp" />
     <ClCompile Include="EBOClass.cpp" />
+    <ClCompile Include="FrameVertexBufferManager.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="KBControlManager.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MouseControlManager.cpp" />
+    <ClCompile Include="MouseControlManager.h" />
     <ClCompile Include="ObjManager.cpp" />
     <ClCompile Include="ShaderClass.cpp" />
     <ClCompile Include="ObjectJSONReader.cpp" />
@@ -146,7 +150,10 @@
     <ClCompile Include="VertexBufferManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CameraViewManager.h" />
     <ClInclude Include="EBOClass.h" />
+    <ClInclude Include="FBOClass.h" />
+    <ClInclude Include="FrameVertexBufferManager.h" />
     <ClInclude Include="KBControlManager.h" />
     <ClInclude Include="ObjectJSONReader.h" />
     <ClInclude Include="ObjManager.h" />

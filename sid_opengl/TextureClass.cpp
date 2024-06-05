@@ -5,9 +5,11 @@
 using namespace std;
 TEXTURE::TEXTURE(std::string image_path)
 {
+	cout << "texture path:" << image_path;
+	image_path = "Resources/" + image_path;
 	//create and bind the texture buffer
-	glGenTextures(1, &texture_id);
-	glBindTexture(GL_PROXY_TEXTURE_2D, texture_id);
+	glGenTextures(1, &m_texture_id);
+	glBindTexture(GL_TEXTURE_2D, m_texture_id);
 
 	//load the image
 
@@ -22,9 +24,14 @@ void TEXTURE::setSlot(int slot_num)
 	glActiveTexture(GL_TEXTURE0 + slot_num);
 }
 
+void TEXTURE::disableSlot()
+{
+	glDisable(GL_TEXTURE_2D);
+}
+
 void TEXTURE::Bind_and_Write()
 {
-	glBindTexture(GL_PROXY_TEXTURE_2D, texture_id);
+	glBindTexture(GL_TEXTURE_2D, m_texture_id);
 
 	//4 required calls 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //gives a pixelated style 
@@ -34,7 +41,7 @@ void TEXTURE::Bind_and_Write()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //gives repeated texture
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); //gives repeated texture
 
-	//write the image data to buffer 
+	//write the image data to texture 
 	if (m_img_channels == 3)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_img_width, m_img_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_img_bytes);
@@ -46,20 +53,19 @@ void TEXTURE::Bind_and_Write()
 	
 	glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(m_img_bytes);
-	//unbind for safety 
-	glBindTexture(GL_PROXY_TEXTURE_2D, 0);
+
 }
 
 void TEXTURE :: Bind()
 {
-	glBindTexture(GL_PROXY_TEXTURE_2D, texture_id);
+	glBindTexture(GL_TEXTURE_2D, m_texture_id);
 }
 void TEXTURE::Unbind()
 {
-	glBindTexture(GL_PROXY_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void TEXTURE::Delete()
 {
-	glDeleteTextures(1, &texture_id);
+	glDeleteTextures(1, &m_texture_id);
 }

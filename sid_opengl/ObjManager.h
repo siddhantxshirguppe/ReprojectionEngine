@@ -8,12 +8,29 @@
 struct Vertex {
     float x, y, z;
     float r, g, b;
+    float s, t;
+
+    Vertex() : x(0.0f), y(0.0f), z(0.0f), r(0.0f), g(0.0f), b(0.0f), s(0.0f), t(0.0f) {}
+
 };
 
+struct Location {
+    float x, y, z;
+    float u, v, w;
+
+    Location() : x(0.0f), y(0.0f), z(0.0f), u(0.0f), v(0.0f), w(0.0f) {}
+};
 struct ObjData {
     std::string objectId;
+    std::string texturePath;
     std::vector<Vertex> vertices;
     std::vector<int> indices;
+    Location loc;
+    bool hasTextures;
+
+    ObjData() : objectId("000"), texturePath("000"), hasTextures(false) {
+        // Initialize other members if needed
+    }
 };
 
 class ObjManager

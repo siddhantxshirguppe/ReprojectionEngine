@@ -1,7 +1,13 @@
 #include"VertexBufferManager.h"
 #include<glad/glad.h>
-VertexBufferManager::VertexBufferManager(std::vector<Vertex>* vertexBufferPtr, std::vector<int>* indexBufferPtr)
+#include"glm/gtc/matrix_transform.hpp"
+#include"glm/gtc/type_ptr.hpp"
+
+VertexBufferManager::VertexBufferManager(std::vector<Vertex>* const vertexBufferPtr, std::vector<int>* const indexBufferPtr, const Location& loc, const bool& hasTextures, const std::string& texture_path)
 {
+
+    mLoc = loc;
+    mHasTextures = hasTextures;
 	m_vertexBufferData = vertexBufferPtr;
 
     // Ensure the pointer is not null before proceeding
@@ -16,6 +22,9 @@ VertexBufferManager::VertexBufferManager(std::vector<Vertex>* vertexBufferPtr, s
             m_reformattedVertexBufferData.push_back(vertex.r);
             m_reformattedVertexBufferData.push_back(vertex.g);
             m_reformattedVertexBufferData.push_back(vertex.b);
+
+            m_reformattedVertexBufferData.push_back(vertex.s);
+            m_reformattedVertexBufferData.push_back(vertex.t);
         }
     }
 
@@ -26,17 +35,30 @@ VertexBufferManager::VertexBufferManager(std::vector<Vertex>* vertexBufferPtr, s
     int offset = 0;
     int layout = 0;
     int num_ele = 3;
-    int total_num_ele = 6;
-    glVertexAttribPointer(layout, num_ele, GL_FLOAT, GL_FALSE, total_num_ele * sizeof(float), (void*)(offset * sizeof(float))); //slot 0 if for vertices
+    int total_num_ele = 8;
+    glVertexAttribPointer(layout, num_ele, GL_FLOAT, GL_FALSE, total_num_ele * sizeof(float), (void*)(offset * sizeof(float)));
     glEnableVertexAttribArray(0);
 
 
     layout = 1;
     offset = 3;
-    glVertexAttribPointer(layout, num_ele, GL_FLOAT, GL_FALSE, total_num_ele * sizeof(float), (void*)(offset * sizeof(float))); //slot 0 if for vertices
+    glVertexAttribPointer(layout, num_ele, GL_FLOAT, GL_FALSE, total_num_ele * sizeof(float), (void*)(offset * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    layout = 2;
+    offset = 6;
+    num_ele = 2;
+    glVertexAttribPointer(layout, num_ele, GL_FLOAT, GL_FALSE, total_num_ele * sizeof(float), (void*)(offset * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
     m_indexBuffer = new EBO(indexBufferPtr->data(), (int)indexBufferPtr->size()*sizeof(int));
+
+    if (mHasTextures)
+    {
+        m_textBuffer = new TEXTURE(texture_path);
+        m_textBuffer->setSlot(0);
+        m_textBuffer->Bind_and_Write();
+    }
 
     m_vaoBuffer->Unbind();
     glEnableVertexAttribArray(0);
@@ -66,4 +88,16 @@ EBO* VertexBufferManager::getIndexBuffer()
 VAO* VertexBufferManager::getVAOBuffer()
 {
     return m_vaoBuffer;
+}
+
+glm::mat4 VertexBufferManager::getModelMatrix()
+{
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 model_mat = glm::translate(model, glm::vec3(mLoc.x,mLoc.y, mLoc.z));
+    return model_mat;
+}
+
+bool VertexBufferManager::hasTexture()
+{
+    return mHasTextures;
 }

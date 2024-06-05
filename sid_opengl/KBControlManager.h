@@ -10,10 +10,10 @@ class KBControlManager
 		static KBControlManager* getInstance(GLFWwindow* window);
 
 		int registerCB();
-		bool turnLeft;
-		bool turnRight;
 		bool moveForward;
 		bool moveBackward;
 		bool moveRight;
 		bool moveLeft;
+
+		bool frameStop;
 };

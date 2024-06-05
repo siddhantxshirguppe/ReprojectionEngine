@@ -36,28 +36,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         }
     }
 
-    if (key == GLFW_KEY_E) {
-        if (action == GLFW_PRESS) {
-            kbManager->turnRight = true;
-            std::cout << "E key pressed" << std::endl;
-        }
-        else if (action == GLFW_RELEASE) {
-            kbManager->turnRight = false;
-            std::cout << "E key released" << std::endl;
-        }
-    }
-
-    if (key == GLFW_KEY_Q) {
-        if (action == GLFW_PRESS) {
-            kbManager->turnLeft= true;
-            std::cout << "Q key pressed" << std::endl;
-        }
-        else if (action == GLFW_RELEASE) {
-            kbManager->turnLeft = false;
-            std::cout << "Q key released" << std::endl;
-        }
-    }
-
     if (key == GLFW_KEY_D) {
         if (action == GLFW_PRESS) {
             kbManager->moveRight = true;
@@ -79,10 +57,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             std::cout << "A key released" << std::endl;
         }
     }
+
+    if (key == GLFW_KEY_F) {
+        if (action == GLFW_PRESS) {
+            kbManager->frameStop = true;
+            std::cout << "F key pressed" << std::endl;
+        }
+        else if (action == GLFW_RELEASE) {
+            kbManager->frameStop = false;
+            std::cout << "F key released" << std::endl;
+        }
+    }
 }
 
 
-KBControlManager::KBControlManager(GLFWwindow* window):turnLeft(false), turnRight(false), moveForward(false), moveBackward(false), m_windowPtr(nullptr)
+KBControlManager::KBControlManager(GLFWwindow* window):moveForward(false), moveBackward(false), m_windowPtr(nullptr)
 {
     m_windowPtr = window;
 	

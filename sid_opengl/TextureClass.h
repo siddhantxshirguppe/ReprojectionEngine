@@ -1,6 +1,8 @@
 #ifndef TEXTURE_CLASS_H
 #define TEXTURE_CLASS_H
 #include<string>
+#include"glad/glad.h";
+
 class TEXTURE
 {
 private:
@@ -8,7 +10,7 @@ private:
 	int m_img_width;
 	int m_img_height;
 	int m_img_channels;
-	unsigned int texture_id;
+	GLuint m_texture_id;
 public:
 	
 
@@ -18,6 +20,7 @@ public:
 	void Bind();
 	void Unbind();
 	void Delete();
+	void disableSlot();
 
 };
 
