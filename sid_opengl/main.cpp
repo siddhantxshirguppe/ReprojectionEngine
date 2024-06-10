@@ -1,6 +1,8 @@
 #include<iostream>
 #include <windows.h>
+
 #include<glad/glad.h>
+
 #include<GLFW/glfw3.h>
 #include"TextureClass.h"
 #include "STB/stb_image.h"
@@ -129,7 +131,46 @@ int init_engine(GLFWwindow** window_ptr)
 
 	return 0;
 }
+void getScreenSpaceCoord(glm::mat4 model, glm::mat4 view, glm::mat4 proj, const std::vector<Vertex>* pointList, float& minX, float& maxX, float& minY, float& maxY)
+{
+	glm::vec2 viewSize(800, 800);
+	glm::vec2 viewOffset(0, 0);
 
+	float loc_minX = INT_MAX;
+	float loc_maxX = INT_MIN;
+	float loc_minY = INT_MAX;
+	float loc_maxY = INT_MIN;
+
+
+
+	vector<Vertex3D> vert3DList;
+
+	for (Vertex vert : *pointList)
+	{
+		Vertex3D vert3d(vert.x, vert.y, vert.z);
+		vert3DList.push_back(vert3d);
+	}
+
+
+	for (Vertex3D vert : vert3DList)
+	{
+		glm::vec4 pointMatrix = glm::vec4(vert.x, vert.y, vert.z, 1.0f);
+		glm::vec4 resMat = proj * view * model * pointMatrix;
+		glm::vec2 ndcPos = glm::vec2(resMat.x / resMat.w, resMat.y / resMat.w);
+		glm::vec2 screenPos = ((ndcPos + 1.0f) / 2.0f) * viewSize + viewOffset;
+
+		loc_minX = min(loc_minX, screenPos.x);
+		loc_maxX = max(loc_maxX, screenPos.x);
+		loc_minY = min(loc_minY, screenPos.y);
+		loc_maxY = max(loc_maxY, screenPos.y);
+	}
+
+	minX = loc_minX;
+	maxX = loc_maxX;
+	minY = loc_minY;
+	maxY = loc_maxY;
+
+}
 int main()
 {
 	GLFWwindow* window = nullptr;
@@ -162,8 +203,27 @@ int main()
 	Shader shader("Shaders/default00.vert", "Shaders/default00.frag");
 	VertexBufferManager* ground_obj = new VertexBufferManager(&objectStore["Ground"].vertices, &objectStore["Ground"].indices, objectStore["Ground"].loc, objectStore["Ground"].hasTextures, objectStore["Ground"].texturePath);
 	VertexBufferManager* cube01_obj = new VertexBufferManager(&objectStore["Cube01"].vertices, &objectStore["Cube01"].indices, objectStore["Cube01"].loc, objectStore["Cube01"].hasTextures, objectStore["Cube01"].texturePath);
-	VertexBufferManager* cube02_obj = new VertexBufferManager(&objectStore["Cube02"].vertices, &objectStore["Cube02"].indices, objectStore["Cube02"].loc, objectStore["Cube02"].hasTextures, objectStore["Cube02"].texturePath);
-	FrameVertexBufferManager* frame_obj = new FrameVertexBufferManager(&objectStore["FrameQuad"].vertices, &objectStore["FrameQuad"].indices, objectStore["FrameQuad"].loc, objectStore["FrameQuad"].hasTextures, objectStore["FrameQuad"].texturePath,camMgr);
+	//FrameVertexBufferManager* frame_obj = new FrameVertexBufferManager(&objectStore["FrameQuad"].vertices, &objectStore["FrameQuad"].indices, objectStore["FrameQuad"].loc, objectStore["FrameQuad"].hasTextures, objectStore["FrameQuad"].texturePath,camMgr);
+
+
+
+	//drawLines test
+	// 
+	Shader line_shader("Shaders/lineShader.vert", "Shaders/lineShader.frag");
+	Vertex2D vertex_a(0.1f, 0.1f);
+	Vertex2D vertex_b(0.5f, 0.5f);
+	
+	std::vector<Vertex2D> lines;
+	std::vector<int> linesIdx;
+
+	lines.push_back(vertex_a);
+	lines.push_back(vertex_b);
+
+	linesIdx.push_back(0);
+	linesIdx.push_back(1);
+
+	VertexBufferManager* line_obj = new VertexBufferManager(&lines, &linesIdx);
+
 
 	//enable depth 
 	glEnable(GL_DEPTH_TEST);
@@ -171,8 +231,6 @@ int main()
 
 
 	int wnd_closed = glfwWindowShouldClose(window);
-	// Use the shader program
-	shader.Activate();
 
 	
 
@@ -188,13 +246,23 @@ int main()
 	unsigned int modelLoc = glGetUniformLocation(shader.getId(), "model");
 	unsigned int viewLoc = glGetUniformLocation(shader.getId(), "view");
 	unsigned int textBoolLoc = glGetUniformLocation(shader.getId(), "hasTextures");
+
 	glm::mat4 proj = glm::perspective(glm::radians(30.0f), (float)(800 / 800), 50.0f, 1000.0f);
 	//glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f,0.1f,1000.0f);
+
+	shader.Activate();
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
-	glm::mat4 model = glm::mat4(1.0f);
+	glm::vec2 viewSize(800, 800);
+	glm::vec2 viewOffset(0, 0);
 
-	//setup KB controls
+	glm::vec4 pointMatrix = glm::vec4(25, 25, -25, 1.0f);
+
+	float min_x = 0;
+	float max_x = 0;
+
+	float min_y = 0;
+	float max_y = 0;
 
 
 	while (!glfwWindowShouldClose(window))
@@ -203,6 +271,7 @@ int main()
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		shader.Activate();
 		 //MODIFY the camera view matrix
 		 glm::mat4 view_mat = camMgr->getCameraView();
 		 glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_mat));
@@ -212,31 +281,37 @@ int main()
 		 //toggle between vao_01 and vao_02
 		 
 		 ground_obj->getVAOBuffer()->Bind();
-
-		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		 glm::mat4 ground_model = ground_obj->getModelMatrix();
+		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(ground_model));
 		 glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_mat));
 		 glUniform1i(textBoolLoc, ground_obj->hasTexture() ? 1 : 0);
 		 glDrawElements(GL_TRIANGLES,6, GL_UNSIGNED_INT, 0);
 
-		 cube02_obj->getVAOBuffer()->Bind();
-
-		 glm::mat4 model_mat_02 = cube02_obj->getModelMatrix();
-		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_mat_02));
-		 glUniform1i(textBoolLoc, cube02_obj->hasTexture() ? 1 : 0);
-		 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
 		 cube01_obj->getVAOBuffer()->Bind();
-
 		 glm::mat4 model_mat_01 = cube01_obj->getModelMatrix();
 		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_mat_01));
 		 glUniform1i(textBoolLoc, cube01_obj->hasTexture() ? 1 : 0);
 		 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-		 frame_obj->getVAOBuffer()->Bind();
-		 glm::mat4 model_mat_frame = frame_obj->getModelMatrix();
-		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_mat_frame));
-		 glUniform1i(textBoolLoc, frame_obj->hasTexture() ? 1 : 0);
-		 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+		 //glm::vec4 resMat = proj * view_mat * model_mat_01 * pointMatrix;
+		 //glm::vec2 ndcPos = glm::vec2(resMat.x / resMat.w, resMat.y / resMat.w);
+		 //glm::vec2 screenPos = ((ndcPos + 1.0f) / 2.0f) * viewSize + viewOffset;
+
+		 getScreenSpaceCoord(model_mat_01, view_mat, proj, &(objectStore["Cube01"].vertices), min_x,max_x, min_y, max_y);
+		 std::cout << "screenspace "<<" "<< min_x <<" "<< max_x <<" "<< min_y <<" "<<max_y<<std::endl;
+
+
+		// glBegin(GL_LINES);
+		 //glVertex2f(.25, 0.25);
+		 //glVertex2f(.75, .75);
+		 //glEnd();
+
+		 //line_shader.Activate();
+		 //line_obj->getVAOBuffer()->Bind();
+		 //glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
+
 #endif
 
 
@@ -259,3 +334,4 @@ int main()
 
 	return 0;
 }
+

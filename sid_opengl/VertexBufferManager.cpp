@@ -3,6 +3,44 @@
 #include"glm/gtc/matrix_transform.hpp"
 #include"glm/gtc/type_ptr.hpp"
 
+VertexBufferManager::VertexBufferManager(std::vector<Vertex2D>* const vertexBufferPtr, std::vector<int>* const indexBufferPtr)
+{
+
+    m_vertex2DBufferData = vertexBufferPtr;
+
+    // Ensure the pointer is not null before proceeding
+    if (m_vertex2DBufferData != nullptr) {
+        // Iterate through the vertex data and push it into the vector
+        for (const auto& vertex : *m_vertex2DBufferData) {
+
+            m_reformattedVertexBufferData.push_back(vertex.x);
+            m_reformattedVertexBufferData.push_back(vertex.y);
+
+        }
+    }
+
+    m_vaoBuffer = new VAO();
+    m_vertexBuffer = new VBO(m_reformattedVertexBufferData.data(), m_reformattedVertexBufferData.size() * sizeof(float));
+
+
+    int offset = 0;
+    int layout = 0;
+    int num_ele = 2;
+    int total_num_ele = 2;
+    glVertexAttribPointer(layout, num_ele, GL_FLOAT, GL_FALSE, total_num_ele * sizeof(float), (void*)(offset * sizeof(float)));
+    glEnableVertexAttribArray(0);
+
+
+    m_indexBuffer = new EBO(indexBufferPtr->data(), (int)indexBufferPtr->size() * sizeof(int));
+
+
+    m_vaoBuffer->Unbind();
+    glEnableVertexAttribArray(0);
+
+    m_vertexBuffer->Unbind();
+    m_indexBuffer->Unbind();
+}
+
 VertexBufferManager::VertexBufferManager(std::vector<Vertex>* const vertexBufferPtr, std::vector<int>* const indexBufferPtr, const Location& loc, const bool& hasTextures, const std::string& texture_path)
 {
 

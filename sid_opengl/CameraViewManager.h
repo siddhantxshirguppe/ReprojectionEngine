@@ -11,7 +11,7 @@ class CameraViewManager
 	private:
 		KBControlManager* KBMgr;
 		MouseControlManager* MSMgr;
-		float moveAmount = 4.0f;
+		float moveAmount = 1.0f;
 		float rotAmount = 1.0f;
 
 		//view matrix 

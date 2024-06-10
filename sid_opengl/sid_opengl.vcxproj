@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>E:\SID_OPENGL\sid_opengl\Libraries\include;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\SID_OPENGL\sid_opengl\Libraries\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Sid_Reprojection_Project\StereoKit_Resources\ReprojectionEngine\sid_opengl\Libraries\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Sid_Reprojection_Project\StereoKit_Resources\ReprojectionEngine\sid_opengl\Libraries\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -171,6 +171,8 @@
     <None Include="Objects.json" />
     <None Include="Shaders\default00.frag" />
     <None Include="Shaders\default00.vert" />
+    <None Include="Shaders\lineShader.frag" />
+    <None Include="Shaders\lineShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

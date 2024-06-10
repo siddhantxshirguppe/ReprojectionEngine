@@ -14,6 +14,23 @@ struct Vertex {
 
 };
 
+struct Vertex3D {
+    float x, y, z;
+
+
+    Vertex3D() : x(0.0f), y(0.0f), z(0.0f) {}
+    Vertex3D(float x, float y, float z) : x(x), y(y), z(z) {}
+
+};
+struct Vertex2D {
+    float x, y;
+
+
+    Vertex2D() : x(0.0f), y(0.0f) {}
+    Vertex2D(float x, float y) : x(x), y(y) {}
+
+};
+
 struct Location {
     float x, y, z;
     float u, v, w;
