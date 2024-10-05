@@ -11,11 +11,12 @@ private:
 	int m_img_height;
 	int m_img_channels;
 	GLuint m_texture_id;
+	int m_texture_slot;
 public:
 	
 
 	TEXTURE(std::string img_path);
-	static void setSlot(int slot_num);
+	void setSlot(int slot_num);
 	void Bind_and_Write();
 	void Bind();
 	void Unbind();

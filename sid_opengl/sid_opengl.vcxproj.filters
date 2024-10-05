@@ -104,12 +104,18 @@
     <ClInclude Include="FrameVertexBufferManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FBOClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\bridge.png">
       <Filter>Resources</Filter>
     </Image>
     <Image Include="Resources\lady.png">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="Resources\test.png">
       <Filter>Resources</Filter>
     </Image>
   </ItemGroup>

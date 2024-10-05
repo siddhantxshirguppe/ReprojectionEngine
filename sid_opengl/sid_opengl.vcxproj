@@ -166,6 +166,7 @@
   <ItemGroup>
     <Image Include="Resources\bridge.png" />
     <Image Include="Resources\lady.png" />
+    <Image Include="Resources\test.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Objects.json" />

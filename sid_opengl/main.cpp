@@ -188,6 +188,7 @@ int main()
 	unsigned int modelLoc = glGetUniformLocation(shader.getId(), "model");
 	unsigned int viewLoc = glGetUniformLocation(shader.getId(), "view");
 	unsigned int textBoolLoc = glGetUniformLocation(shader.getId(), "hasTextures");
+	unsigned int textSlotLoc = glGetUniformLocation(shader.getId(), "texture_slot");
 	glm::mat4 proj = glm::perspective(glm::radians(30.0f), (float)(800 / 800), 50.0f, 1000.0f);
 	//glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f,0.1f,1000.0f);
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
@@ -210,9 +211,12 @@ int main()
 
 #if 1 
 		 //toggle between vao_01 and vao_02
-		 
-		 ground_obj->getVAOBuffer()->Bind();
+		 glUniform1i(textSlotLoc, 0);
 
+
+		 ground_obj->getVAOBuffer()->Bind();
+		 ground_obj->getTextBuffer()->Bind();
+		 
 		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		 glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_mat));
 		 glUniform1i(textBoolLoc, ground_obj->hasTexture() ? 1 : 0);
@@ -233,6 +237,8 @@ int main()
 		 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 		 frame_obj->getVAOBuffer()->Bind();
+		 frame_obj->getTextBuffer()->Bind();
+		 //glUniform1i(textSlotLoc, 1);
 		 glm::mat4 model_mat_frame = frame_obj->getModelMatrix();
 		 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_mat_frame));
 		 glUniform1i(textBoolLoc, frame_obj->hasTexture() ? 1 : 0);

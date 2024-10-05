@@ -8,7 +8,7 @@
 #include "VAOClass.h"
 #include "TextureClass.h"
 #include "glm/glm.hpp"
-
+static int slotCounter = 0;
 class VertexBufferManager
 {
 private:
@@ -26,6 +26,7 @@ public:
 	VBO* getVertexBuffer();
 	EBO* getIndexBuffer();
 	VAO* getVAOBuffer();
+	TEXTURE* getTextBuffer();
 	int BuildVertexBuffer();
 	VertexBufferManager(std::vector<Vertex>* const vertexbufferPtr, std::vector<int>* const indexBufferPtr, const Location& loc, const bool& hasTextures, const std::string& texture_path);
 	virtual glm::mat4 getModelMatrix();

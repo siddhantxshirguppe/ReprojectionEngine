@@ -56,7 +56,8 @@ VertexBufferManager::VertexBufferManager(std::vector<Vertex>* const vertexBuffer
     if (mHasTextures)
     {
         m_textBuffer = new TEXTURE(texture_path);
-        m_textBuffer->setSlot(0);
+        m_textBuffer->setSlot(slotCounter);
+        //slotCounter++;
         m_textBuffer->Bind_and_Write();
     }
 
@@ -89,7 +90,10 @@ VAO* VertexBufferManager::getVAOBuffer()
 {
     return m_vaoBuffer;
 }
-
+TEXTURE* VertexBufferManager::getTextBuffer()
+{
+    return m_textBuffer;
+}
 glm::mat4 VertexBufferManager::getModelMatrix()
 {
     glm::mat4 model = glm::mat4(1.0f);

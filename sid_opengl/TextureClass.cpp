@@ -21,7 +21,8 @@ TEXTURE::TEXTURE(std::string image_path)
 
 void TEXTURE::setSlot(int slot_num)
 {
-	glActiveTexture(GL_TEXTURE0 + slot_num);
+	m_texture_slot = slot_num;
+	glActiveTexture(GL_TEXTURE0 + m_texture_slot);
 }
 
 void TEXTURE::disableSlot()
@@ -58,6 +59,7 @@ void TEXTURE::Bind_and_Write()
 
 void TEXTURE :: Bind()
 {
+	glActiveTexture(GL_TEXTURE0 + m_texture_slot);
 	glBindTexture(GL_TEXTURE_2D, m_texture_id);
 }
 void TEXTURE::Unbind()
